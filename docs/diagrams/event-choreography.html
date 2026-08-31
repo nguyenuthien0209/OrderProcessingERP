@@ -1,0 +1,408 @@
+<title>Event Choreography Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #EEF1F4;
+    --surface: #FFFFFF;
+    --ink: #1C232C;
+    --ink-muted: #57626C;
+    --line: #B7C0C8;
+    --flow: #146E75;
+    --fault: #A8461F;
+    --signal: #574876;
+    --font-sans: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    --font-serif: 'IBM Plex Serif', Georgia, 'Times New Roman', serif;
+    --font-mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #12161B;
+      --surface: #1B2129;
+      --ink: #E7ECEF;
+      --ink-muted: #A7B1BA;
+      --line: #3C454E;
+      --flow: #3FB6BC;
+      --fault: #E08556;
+      --signal: #A996D1;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper: #12161B;
+    --surface: #1B2129;
+    --ink: #E7ECEF;
+    --ink-muted: #A7B1BA;
+    --line: #3C454E;
+    --flow: #3FB6BC;
+    --fault: #E08556;
+    --signal: #A996D1;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    margin: 0;
+    padding: 56px 24px 80px;
+    display: flex;
+    justify-content: center;
+  }
+
+  main {
+    width: 100%;
+    max-width: 1240px;
+    display: flex;
+    flex-direction: column;
+    gap: 36px;
+  }
+
+  header {
+    max-width: 62ch;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+
+  h1 {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: clamp(28px, 4vw, 38px);
+    line-height: 1.12;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .dek {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 17px;
+    color: var(--ink-muted);
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  figure {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .diagram-scroll {
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--surface);
+    padding: 8px;
+  }
+
+  .diagram-scroll svg {
+    display: block;
+    width: 1320px;
+    max-width: none;
+    height: auto;
+  }
+
+  figcaption {
+    font-family: var(--font-serif);
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--ink-muted);
+    max-width: 68ch;
+  }
+
+  figcaption strong {
+    color: var(--ink);
+    font-weight: 600;
+    font-style: normal;
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px 32px;
+    padding: 18px 22px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--ink-muted);
+  }
+
+  .legend-swatch {
+    width: 28px;
+    height: 0;
+    border-top-width: 2.5px;
+    border-top-style: solid;
+    flex: none;
+  }
+
+  .legend-swatch.flow { border-color: var(--flow); }
+  .legend-swatch.fault { border-color: var(--fault); border-top-style: dashed; }
+  .legend-swatch.signal { border-color: var(--signal); border-top-style: dashed; }
+  .legend-swatch.frame { border-color: var(--line); border-top-style: dashed; }
+
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .fact {
+    background: var(--surface);
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .fact-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+
+  .fact-body {
+    font-family: var(--font-sans);
+    font-size: 14.5px;
+    line-height: 1.5;
+    color: var(--ink);
+  }
+
+  .fact-body code {
+    font-family: var(--font-mono);
+    font-size: 0.92em;
+    background: var(--paper);
+    padding: 1px 5px;
+    border-radius: 4px;
+    border: 1px solid var(--line);
+  }
+
+  svg text { font-family: var(--font-mono); }
+
+  .lane-box { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
+  .lane-label { fill: var(--ink); font-weight: 600; font-size: 15px; text-anchor: middle; }
+  .lifeline { stroke: var(--line); stroke-width: 1; stroke-dasharray: 2 6; }
+
+  .flow-line { stroke: var(--flow); stroke-width: 2.25; fill: none; }
+  .flow-fill { fill: var(--flow); }
+  .flow-text { fill: var(--flow); font-size: 11.5px; font-weight: 500; }
+
+  .fault-line { stroke: var(--fault); stroke-width: 2; stroke-dasharray: 6 4; fill: none; }
+  .fault-fill { fill: var(--fault); }
+  .fault-text { fill: var(--fault); font-size: 10.5px; font-weight: 500; }
+
+  .signal-line { stroke: var(--signal); stroke-width: 1.5; stroke-dasharray: 3 5; fill: none; }
+  .signal-fill { fill: var(--signal); }
+  .signal-text { fill: var(--signal); font-size: 10.5px; font-style: italic; }
+
+  .status-dot { stroke: var(--surface); stroke-width: 1.5; }
+  .status-text { font-size: 10.5px; font-weight: 600; letter-spacing: 0.03em; }
+
+  .frame-box { fill: none; stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 5 4; }
+  .frame-tab { fill: var(--line); }
+  .frame-tab-text { fill: var(--surface); font-size: 11px; font-weight: 700; text-anchor: middle; }
+  .guard-text { fill: var(--ink-muted); font-size: 12px; font-style: italic; }
+
+  .divider-line { stroke: var(--line); stroke-width: 1; stroke-dasharray: 4 4; }
+  .divider-bg { fill: var(--surface); }
+  .divider-text { fill: var(--ink-muted); font-family: var(--font-serif); font-style: italic; font-size: 12px; text-anchor: middle; }
+
+  .sync-loop { stroke: var(--ink-muted); stroke-width: 1.25; fill: none; }
+  .sync-label { fill: var(--ink-muted); font-size: 10.5px; font-style: italic; text-anchor: end; }
+
+  footer {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--ink-muted);
+    letter-spacing: 0.02em;
+  }
+</style>
+
+<main>
+  <header>
+    <span class="eyebrow">Order Processing ERP · Event-Driven Architecture</span>
+    <h1>Event Choreography</h1>
+    <p class="dek">How five services move a single order from creation to shipment by reacting to each
+      other's events — no orchestrator decides what happens next.</p>
+  </header>
+
+  <figure>
+    <div class="diagram-scroll">
+      <svg viewBox="0 0 1320 980" role="img" aria-label="Sequence diagram of five services — Ordering, Inventory, Payments, Shipping, and Notifications — exchanging RabbitMQ events to fulfil an order. Ordering publishes OrderCreated to Inventory and Notifications. Inventory either reserves stock and notifies Ordering and Payments, or fails and notifies Ordering, which then publishes OrderCancelled to Notifications and a compensating release to Inventory. If reserved, Payments authorizes or declines; authorization leads to OrderConfirmed being sent to Shipping and Notifications, decline leads to the same OrderCancelled and release sequence. Shipping then publishes OrderShipped back to Ordering, which notifies Notifications. No central orchestrator directs any of this.">
+
+        <rect x="15" y="40" width="170" height="52" rx="8" class="lane-box"/>
+        <text x="100" y="71" class="lane-label">Ordering</text>
+        <rect x="295" y="40" width="170" height="52" rx="8" class="lane-box"/>
+        <text x="380" y="71" class="lane-label">Inventory</text>
+        <rect x="575" y="40" width="170" height="52" rx="8" class="lane-box"/>
+        <text x="660" y="71" class="lane-label">Payments</text>
+        <rect x="855" y="40" width="170" height="52" rx="8" class="lane-box"/>
+        <text x="940" y="71" class="lane-label">Shipping</text>
+        <rect x="1135" y="40" width="170" height="52" rx="8" class="lane-box"/>
+        <text x="1220" y="71" class="lane-label">Notifications</text>
+
+        <line x1="100" y1="92" x2="100" y2="965" class="lifeline"/>
+        <line x1="380" y1="92" x2="380" y2="965" class="lifeline"/>
+        <line x1="660" y1="92" x2="660" y2="965" class="lifeline"/>
+        <line x1="940" y1="92" x2="940" y2="965" class="lifeline"/>
+        <line x1="1220" y1="92" x2="1220" y2="965" class="lifeline"/>
+
+        <path d="M100,108 C40,108 40,132 100,132" class="sync-loop"/>
+        <text x="30" y="124" class="sync-label">validate &amp; price → Catalog (sync HTTP)</text>
+
+        <circle cx="100" cy="150" r="4" class="flow-fill status-dot"/>
+        <text x="85" y="154" text-anchor="end" class="status-text flow-text">PENDING</text>
+
+        <line x1="100" y1="180" x2="380" y2="180" class="flow-line"/>
+        <polygon points="370,175 370,185 380,180" class="flow-fill"/>
+        <text x="240" y="172" text-anchor="middle" class="flow-text">OrderCreated</text>
+
+        <line x1="100" y1="205" x2="1220" y2="205" class="signal-line"/>
+        <polygon points="1210,200 1210,210 1220,205" class="signal-fill"/>
+        <text x="660" y="198" text-anchor="middle" class="signal-text">OrderCreated</text>
+
+        <rect x="55" y="250" width="650" height="255" rx="10" class="frame-box"/>
+        <rect x="55" y="250" width="48" height="22" class="frame-tab"/>
+        <text x="79" y="265" class="frame-tab-text">ALT</text>
+
+        <text x="75" y="294" class="guard-text">[stock available]</text>
+        <line x1="380" y1="310" x2="100" y2="310" class="flow-line"/>
+        <polygon points="110,305 110,315 100,310" class="flow-fill"/>
+        <text x="240" y="302" text-anchor="middle" class="flow-text">InventoryReserved</text>
+        <line x1="380" y1="310" x2="660" y2="310" class="flow-line"/>
+        <polygon points="650,305 650,315 660,310" class="flow-fill"/>
+        <text x="520" y="302" text-anchor="middle" class="flow-text">InventoryReserved</text>
+        <circle cx="100" cy="330" r="4" class="flow-fill status-dot"/>
+        <text x="85" y="334" text-anchor="end" class="status-text flow-text">AWAITING PAYMENT</text>
+
+        <line x1="65" y1="360" x2="695" y2="360" class="divider-line"/>
+        <rect x="363" y="352" width="34" height="16" class="divider-bg"/>
+        <text x="380" y="364" class="divider-text">or</text>
+
+        <text x="75" y="390" class="guard-text">[insufficient stock]</text>
+        <line x1="380" y1="406" x2="100" y2="406" class="fault-line"/>
+        <polygon points="110,401 110,411 100,406" class="fault-fill"/>
+        <text x="240" y="398" text-anchor="middle" class="fault-text">InventoryReservationFailed</text>
+        <circle cx="100" cy="406" r="4" class="fault-fill status-dot"/>
+        <text x="85" y="424" text-anchor="end" class="status-text fault-text">CANCELLED</text>
+
+        <line x1="100" y1="450" x2="1220" y2="450" class="signal-line"/>
+        <polygon points="1210,445 1210,455 1220,450" class="signal-fill"/>
+        <text x="660" y="443" text-anchor="middle" class="signal-text">OrderCancelled</text>
+        <line x1="100" y1="478" x2="380" y2="478" class="fault-line"/>
+        <polygon points="370,473 370,483 380,478" class="fault-fill"/>
+        <text x="240" y="470" text-anchor="middle" class="fault-text">OrderCancelled (release stock; no-op if none held)</text>
+
+        <rect x="55" y="545" width="650" height="255" rx="10" class="frame-box"/>
+        <rect x="55" y="545" width="48" height="22" class="frame-tab"/>
+        <text x="79" y="560" class="frame-tab-text">ALT</text>
+
+        <text x="75" y="589" class="guard-text">[card authorized]</text>
+        <line x1="660" y1="605" x2="100" y2="605" class="flow-line"/>
+        <polygon points="110,600 110,610 100,605" class="flow-fill"/>
+        <text x="380" y="597" text-anchor="middle" class="flow-text">PaymentAuthorized</text>
+        <circle cx="100" cy="605" r="4" class="flow-fill status-dot"/>
+        <text x="85" y="623" text-anchor="end" class="status-text flow-text">CONFIRMED</text>
+
+        <line x1="65" y1="655" x2="695" y2="655" class="divider-line"/>
+        <rect x="363" y="647" width="34" height="16" class="divider-bg"/>
+        <text x="380" y="659" class="divider-text">or</text>
+
+        <text x="75" y="685" class="guard-text">[card declined]</text>
+        <line x1="660" y1="701" x2="100" y2="701" class="fault-line"/>
+        <polygon points="110,696 110,706 100,701" class="fault-fill"/>
+        <text x="380" y="693" text-anchor="middle" class="fault-text">PaymentFailed</text>
+        <circle cx="100" cy="701" r="4" class="fault-fill status-dot"/>
+        <text x="85" y="719" text-anchor="end" class="status-text fault-text">CANCELLED</text>
+
+        <line x1="100" y1="745" x2="1220" y2="745" class="signal-line"/>
+        <polygon points="1210,740 1210,750 1220,745" class="signal-fill"/>
+        <text x="660" y="738" text-anchor="middle" class="signal-text">OrderCancelled</text>
+        <line x1="100" y1="773" x2="380" y2="773" class="fault-line"/>
+        <polygon points="370,768 370,778 380,773" class="fault-fill"/>
+        <text x="240" y="765" text-anchor="middle" class="fault-text">OrderCancelled (release stock; no-op if none held)</text>
+
+        <line x1="100" y1="845" x2="940" y2="845" class="flow-line"/>
+        <polygon points="930,840 930,850 940,845" class="flow-fill"/>
+        <text x="520" y="837" text-anchor="middle" class="flow-text">OrderConfirmed</text>
+        <line x1="100" y1="870" x2="1220" y2="870" class="signal-line"/>
+        <polygon points="1210,865 1210,875 1220,870" class="signal-fill"/>
+        <text x="660" y="863" text-anchor="middle" class="signal-text">OrderConfirmed</text>
+
+        <line x1="940" y1="910" x2="100" y2="910" class="flow-line"/>
+        <polygon points="110,905 110,915 100,910" class="flow-fill"/>
+        <text x="520" y="902" text-anchor="middle" class="flow-text">OrderShipped</text>
+        <circle cx="100" cy="910" r="4" class="flow-fill status-dot"/>
+        <text x="85" y="928" text-anchor="end" class="status-text flow-text">SHIPPED</text>
+
+        <line x1="100" y1="945" x2="1220" y2="945" class="signal-line"/>
+        <polygon points="1210,940 1210,950 1220,945" class="signal-fill"/>
+        <text x="660" y="938" text-anchor="middle" class="signal-text">OrderShipped</text>
+      </svg>
+    </div>
+    <figcaption>
+      Every arrow above is a message a service published through its own <strong>transactional outbox</strong> and
+      picked up by another service's MassTransit consumer — nothing here is a direct method call. The two dashed
+      <strong>ALT</strong> frames are the only two points where the outcome forks: whether stock can be reserved, and
+      whether the charge is authorized. Either failure produces the identical <code>OrderCancelled</code> +
+      compensating-release pair, independently, with no coordinator deciding to roll anything back.
+    </figcaption>
+  </figure>
+
+  <div class="legend">
+    <span class="legend-item"><span class="legend-swatch flow"></span>event, progressing the order</span>
+    <span class="legend-item"><span class="legend-swatch fault"></span>event, failure or compensating action</span>
+    <span class="legend-item"><span class="legend-swatch signal"></span>event, Notifications fan-out</span>
+    <span class="legend-item"><span class="legend-swatch frame"></span>lifeline / ALT frame border</span>
+  </div>
+
+  <div class="facts">
+    <div class="fact">
+      <span class="fact-label">Correlation</span>
+      <p class="fact-body">Every message in a given order's chain carries <code>CorrelationId = OrderId</code>, so
+        the whole sequence above can be traced as one thread through five independent services' logs.</p>
+    </div>
+    <div class="fact">
+      <span class="fact-label">Delivery guarantee</span>
+      <p class="fact-body">A handler writes its entity changes and an outbox row in one <code>SaveChangesAsync</code>.
+        A background <code>OutboxProcessor</code> polls every 5s and publishes — so a state change is never
+        announced before it's actually saved.</p>
+    </div>
+    <div class="fact">
+      <span class="fact-label">The one exception</span>
+      <p class="fact-body">Ordering calls Catalog over plain HTTP to validate line items and snapshot pricing at
+        order-creation time — the single synchronous hop in an otherwise fully asynchronous system.</p>
+    </div>
+  </div>
+
+  <footer>OrderProcessingERP — Ordering · Inventory · Payments · Shipping · Notifications</footer>
+</main>
