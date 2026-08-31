@@ -7,7 +7,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Order Processing ERP: six independent .NET 8 microservices (Ordering, Inventory, Payments, Shipping, Catalog,
 Notifications) that communicate over RabbitMQ (via MassTransit) using event choreography — there is no saga
 orchestrator. Each service that owns data has its own CQRS-structured application layer (MediatR) and its own
-SQL Server / Azure SQL database. There are no test projects in this solution.
+SQL Server / Azure SQL database. Each of the five data-owning services also has a `*.Domain.Tests` xUnit project
+(FluentAssertions) covering its domain entities' business rules — see `dotnet test` below.
 
 ## Commands
 
@@ -15,6 +16,9 @@ SQL Server / Azure SQL database. There are no test projects in this solution.
 # restore + build the whole solution
 dotnet restore OrderProcessingERP.sln
 dotnet build OrderProcessingERP.sln --no-restore
+
+# run all domain unit tests (all *.Domain.Tests projects)
+dotnet test OrderProcessingERP.sln --filter "FullyQualifiedName~Domain.Tests"
 
 # run everything (SQL Server, RabbitMQ, all 6 services) in Docker
 docker compose up --build
