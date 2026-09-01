@@ -27,6 +27,19 @@ services:
       timeout: 5s
       retries: 10
 
+  identity-api:
+    build:
+      context: .
+      dockerfile: src/Services/Identity/Identity.Api/Dockerfile
+    container_name: op-identity-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Docker
+    ports:
+      - "5006:8080"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+
   catalog-api:
     build:
       context: .
@@ -39,6 +52,8 @@ services:
     depends_on:
       sqlserver:
         condition: service_healthy
+      identity-api:
+        condition: service_started
 
   inventory-api:
     build:
@@ -54,6 +69,8 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      identity-api:
+        condition: service_started
 
   payments-api:
     build:
@@ -69,6 +86,8 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      identity-api:
+        condition: service_started
 
   shipping-api:
     build:
@@ -84,6 +103,8 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      identity-api:
+        condition: service_started
 
   ordering-api:
     build:
@@ -100,6 +121,8 @@ services:
       rabbitmq:
         condition: service_healthy
       catalog-api:
+        condition: service_started
+      identity-api:
         condition: service_started
 
   notifications-worker:

@@ -1,11 +1,13 @@
 using Inventory.Application.Stock.Queries.GetStockByProductId;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Inventory.Api.Controllers;
 
 [ApiController]
 [Route("api/stock")]
+[Authorize(Policy = "inventory.api")]
 public class StockController : ControllerBase
 {
     private readonly ISender _sender;

@@ -1,8 +1,12 @@
+using Common.Auth;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 using Ordering.Application;
 using Ordering.Infrastructure;
 using Ordering.Infrastructure.Persistence;
 using Serilog;
+
+const string ApiScope = "ordering.api";
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,8 +17,27 @@ builder.Host.UseSerilog((context, services, configuration) => configuration
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
+    {
+        Type = SecuritySchemeType.OAuth2,
+        Flows = new OpenApiOAuthFlows
+        {
+            ClientCredentials = new OpenApiOAuthFlow
+            {
+                TokenUrl = new Uri($"{builder.Configuration["Identity:Authority"]}/connect/token"),
+                Scopes = new Dictionary<string, string> { [ApiScope] = "Ordering API" }
+            }
+        }
+    });
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        [new OpenApiSecurityScheme { Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "oauth2" } }] = [ApiScope]
+    });
+});
 
+builder.Services.AddJwtBearerAuthentication(builder.Configuration, ApiScope);
 builder.Services.AddOrderingApplication();
 builder.Services.AddOrderingInfrastructure(builder.Configuration);
 
@@ -23,10 +46,11 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Docker"))
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c => c.OAuthClientId("swagger"));
 }
 
 app.UseSerilogRequestLogging();
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 

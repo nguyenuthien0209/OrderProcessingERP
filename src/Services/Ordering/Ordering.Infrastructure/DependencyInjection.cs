@@ -1,4 +1,5 @@
 using Common.Outbox;
+using Duende.AccessTokenManagement;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -21,10 +22,22 @@ public static class DependencyInjection
 
         services.AddScoped<IOrderingDbContext>(sp => sp.GetRequiredService<OrderingDbContext>());
 
+        // Ordering's HTTP call to Catalog is authenticated with a client-credentials token (scope "catalog.api"),
+        // fetched from the Identity service and cached/refreshed automatically by Duende.AccessTokenManagement.
+        services.AddClientCredentialsTokenManagement()
+            .AddClient("catalog", client =>
+            {
+                client.TokenEndpoint = $"{configuration["Identity:Authority"]}/connect/token";
+                client.ClientId = configuration["Identity:ClientId"];
+                client.ClientSecret = configuration["Identity:ClientSecret"];
+                client.Scope = configuration["Identity:Scope"];
+            });
+
         services.AddHttpClient<ICatalogServiceClient, CatalogServiceClient>(client =>
             {
                 client.BaseAddress = new Uri(configuration["Services:Catalog:BaseUrl"]!);
             })
+            .AddClientCredentialsTokenHandler("catalog")
             .AddPolicyHandler(HttpPolicyExtensions
                 .HandleTransientHttpError()
                 .WaitAndRetryAsync(3, attempt => TimeSpan.FromMilliseconds(200 * attempt)));
