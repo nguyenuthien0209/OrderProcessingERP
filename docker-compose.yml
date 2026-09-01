@@ -27,6 +27,25 @@ services:
       timeout: 5s
       retries: 10
 
+  identity-api:
+    build:
+      context: .
+      dockerfile: src/Services/Identity/Identity.Api/Dockerfile
+    container_name: op-identity-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Docker
+    ports:
+      - "5006:8080"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/.well-known/openid-configuration"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
   catalog-api:
     build:
       context: .
@@ -38,6 +57,8 @@ services:
       - "5005:8080"
     depends_on:
       sqlserver:
+        condition: service_healthy
+      identity-api:
         condition: service_healthy
 
   inventory-api:
@@ -54,6 +75,8 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      identity-api:
+        condition: service_healthy
 
   payments-api:
     build:
@@ -69,6 +92,8 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      identity-api:
+        condition: service_healthy
 
   shipping-api:
     build:
@@ -83,6 +108,8 @@ services:
       sqlserver:
         condition: service_healthy
       rabbitmq:
+        condition: service_healthy
+      identity-api:
         condition: service_healthy
 
   ordering-api:
@@ -101,6 +128,8 @@ services:
         condition: service_healthy
       catalog-api:
         condition: service_started
+      identity-api:
+        condition: service_healthy
 
   notifications-worker:
     build:

@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Payments.Application.Payments.Queries.GetPaymentByOrderId;
 
@@ -6,6 +7,7 @@ namespace Payments.Api.Controllers;
 
 [ApiController]
 [Route("api/payments")]
+[Authorize(Policy = "payments.api")]
 public class PaymentsController : ControllerBase
 {
     private readonly ISender _sender;

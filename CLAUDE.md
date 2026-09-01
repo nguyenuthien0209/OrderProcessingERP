@@ -8,7 +8,8 @@ Order Processing ERP: six independent .NET 8 microservices (Ordering, Inventory,
 Notifications) that communicate over RabbitMQ (via MassTransit) using event choreography — there is no saga
 orchestrator. Each service that owns data has its own CQRS-structured application layer (MediatR) and its own
 SQL Server / Azure SQL database. Each of the five data-owning services also has a `*.Domain.Tests` xUnit project
-(FluentAssertions) covering its domain entities' business rules — see `dotnet test` below.
+(FluentAssertions) covering its domain entities' business rules — see `dotnet test` below. A seventh service,
+Identity, provides authentication for the other five APIs — see **Authentication** below.
 
 ## Commands
 
@@ -46,6 +47,12 @@ dotnet ef migrations add <Name> \
 
 Migrations apply automatically on startup (`dbContext.Database.Migrate()` in each `Program.cs`) — convenient for
 `docker compose up`, but that's a dev-only shortcut; don't rely on it as the deploy story for anything beyond this repo.
+
+Identity.Api has **three** separate DbContexts of its own (all single-project, so `--project` and `--startup-project`
+are both `src/Services/Identity/Identity.Api/Identity.Api.csproj`): `ApplicationDbContext` (ASP.NET Core Identity's
+user store), `ConfigurationDbContext` and `PersistedGrantDbContext` (Duende IdentityServer's client/scope config and
+token/grant storage, from `Duende.IdentityServer.EntityFramework`). Disambiguate with `--context` and give each a
+distinct `--output-dir` (e.g. `Migrations/Identity`, `Migrations/Configuration`, `Migrations/PersistedGrant`).
 
 ## Architecture
 
@@ -118,6 +125,26 @@ interaction is asynchronous over RabbitMQ.
 (`WirelessMouseId`, `MechanicalKeyboardId`, `UsbCDockId`) into two separate databases via EF `HasData`. If you add
 or change a seeded product, update both files — there is no runtime mechanism keeping them in sync (in a real
 system this would be a `ProductCreated` event instead).
+
+### Authentication
+
+`src/Services/Identity/Identity.Api` is a single-project service (no `.Domain`/`.Application` split — it has no
+business logic of its own, like `Notifications.Worker`) hosting **Duende IdentityServer** plus ASP.NET Core Identity
+for its user store, backed by its own `IdentityDb`. It issues `client_credentials` JWTs; every API scope matches a
+service name (`ordering.api`, `inventory.api`, `payments.api`, `shipping.api`, `catalog.api`). Seed clients (dev-only,
+in `Identity.Api/Data/SeedData.cs`, same "seed on boot" shortcut as everything else here): `m2m.ordering` (scope
+`catalog.api`, used by Ordering's outbound HTTP call to Catalog) and `swagger` (all five scopes, for the "Authorize"
+button in each service's Swagger UI).
+
+Each of the five API-owning services calls `services.AddJwtBearerAuthentication(configuration, "<service>.api")`
+(`BuildingBlocks/Common/Auth/ApiAuthenticationExtensions.cs`) from `Program.cs`, and its top-level controller carries
+`[Authorize(Policy = "<service>.api")]`. The `Identity:Authority` config key (plus `Identity:RequireHttpsMetadata:
+false`, since everything runs over plain HTTP here) points at the Identity service — `http://identity-api:8080` in
+Docker, `http://localhost:5006` in Development. `Notifications.Worker` has no HTTP API and needs none of this.
+
+Duende IdentityServer requires a commercial license for production use beyond its free tier; this repo runs it
+unlicensed (`.AddDeveloperSigningCredential()`, a startup log warning) as a dev/demo setup only, matching the same
+posture as the plaintext SA password and migrate-on-boot elsewhere in this repo.
 
 ### Environment-driven configuration
 

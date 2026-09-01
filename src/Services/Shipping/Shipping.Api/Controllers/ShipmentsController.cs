@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shipping.Application.Shipments.Queries.GetShipmentByOrderId;
 
@@ -6,6 +7,7 @@ namespace Shipping.Api.Controllers;
 
 [ApiController]
 [Route("api/shipments")]
+[Authorize(Policy = "shipping.api")]
 public class ShipmentsController : ControllerBase
 {
     private readonly ISender _sender;

@@ -2,12 +2,14 @@ using Catalog.Application.Products.Commands.CreateProduct;
 using Catalog.Application.Products.Queries.GetProductById;
 using Catalog.Application.Products.Queries.GetProducts;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Catalog.Api.Controllers;
 
 [ApiController]
 [Route("api/products")]
+[Authorize(Policy = "catalog.api")]
 public class ProductsController : ControllerBase
 {
     private readonly ISender _sender;

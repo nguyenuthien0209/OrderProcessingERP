@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Ordering.Application.Orders.Commands.CancelOrder;
 using Ordering.Application.Orders.Commands.CreateOrder;
@@ -9,6 +10,7 @@ namespace Ordering.Api.Controllers;
 
 [ApiController]
 [Route("api/orders")]
+[Authorize(Policy = "ordering.api")]
 public class OrdersController : ControllerBase
 {
     private readonly ISender _sender;
